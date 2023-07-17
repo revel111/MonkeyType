@@ -1,8 +1,6 @@
 package group.monkeytype;
 
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -15,13 +13,16 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Objects;
+import java.util.function.UnaryOperator;
 
 public class Main extends Application {
-    public static String var;
-    public static String time;
+    public static String language = null;
+    public static String time = null;
     public static boolean isInTest = false;
 
     @Override
@@ -32,9 +33,6 @@ public class Main extends Application {
         boxes.getChildren().addAll(choiceTime, choiceLanguage);
         boxes.setSpacing(25);
         boxes.setPadding(new Insets(15, 0, 35, 520));
-
-        choiceTime.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> time = (String) choiceTime.getItems().get(newValue.intValue()));
-        choiceLanguage.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> var = (String) choiceLanguage.getItems().get(newValue.intValue()));
 
         HBox instructions = new HBox();
         ImageView imageView = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/footer.png")));
@@ -48,24 +46,46 @@ public class Main extends Application {
 //        executor.execute(new Thread(() -> {
 //
 //        }));
-        TextArea textGenerated = new TextArea("fuck");
+
+//        UnaryOperator<TextFormatter.Change> textFilter = change -> {
+//            String newText = change.getControlNewText();
+//            if (newText.equals("f"))
+//                return change;
+//            return null;
+//        };
+//
+//        textGenerated.setTextFormatter(new TextFormatter<>(textFilter));
+        TextArea textGenerated = new TextArea();
+        textGenerated.setStyle("-fx-text-fill: rgba(209, 208, 197, 0.7)");
+//        textGenerated.setStyle("-fx-background-color: rgba(53,89,119,0.4)");
 //        textGenerated.setFill(Color.rgb(209, 208, 197));
         textGenerated.setFont(Font.font(20));
-//        textGenerated.setOpacity(0.5);
 
+        TextArea textTyped = new TextArea("");
+        textTyped.setFont(Font.font(20));
+//        textTyped.setStyle("-fx-background-color: transparent; -fx-opacity: 0.5;");
 
-//        Text textTyped = new TextField();
-//        textTyped.setStyle("-fx-border-color: transparent; -fx-border-width: 0;");
-//        textTyped.setFont(Font.font(20));
+        choiceTime.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
+            time = (String) choiceTime.getItems().get(newValue.intValue());
+        });
+        choiceLanguage.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
+            language = (String) choiceLanguage.getItems().get(newValue.intValue());
+            try {
+                textGenerated.setText(Operations.readWords());
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
+        StackPane text = new StackPane(textGenerated, textTyped);
         BorderPane root = new BorderPane();
-//        root.setCenter(textTyped);
-        root.setCenter(textGenerated);
+        root.setCenter(text);
         root.setBottom(instructions);
         root.setTop(boxes);
         root.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
 
         Scene scene = new Scene(root, 1200, 760);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/monkeytype/background.css")).toExternalForm());
         stage.setScene(scene);
         stage.show();
         stage.setTitle("MonkeyType");
@@ -86,7 +106,7 @@ public class Main extends Application {
 
         scene.setOnKeyPressed(event -> {
             if (event.getCode().isLetterKey() && !isInTest) {
-                if (var == null || time == null) {
+                if (language == null || time == null) {
                     Alert a = new Alert(Alert.AlertType.NONE);
                     a.setAlertType(Alert.AlertType.WARNING);
                     a.setHeaderText("Choose time and language");
@@ -104,7 +124,7 @@ public class Main extends Application {
 
     public static void main(String[] args) throws FileNotFoundException {
         launch();
-
+//        System.out.println(Operations.readWords());
 //        ArrayList<String> arrayList = Operations.readWords();
 //        for (String s : arrayList) System.out.print(s + " ");
     }

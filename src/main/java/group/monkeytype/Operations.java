@@ -3,16 +3,10 @@ package group.monkeytype;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.Random;
-import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class Operations {
     public static String[] getLanguages() {
@@ -28,19 +22,20 @@ public class Operations {
         return strings;
     }
 
-    public static ArrayList<String> readWords() throws FileNotFoundException {
-        ArrayList<String> words = new ArrayList<>();
+    public static String readWords() throws FileNotFoundException {
+        StringBuilder stringBuil = new StringBuilder();
         Random random = new Random();
         int n = 0;
         while (n < 30) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("dictionary/" + Main.var + ".txt"), StandardCharsets.UTF_8))) {
-                long count = Files.lines(Paths.get("dictionary/" + Main.var + ".txt")).count();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("dictionary/" + Main.language + ".txt"), StandardCharsets.UTF_8))) {
+                long count = Files.lines(Paths.get("dictionary/" + Main.language + ".txt")).count();
                 int randomNumber = random.nextInt((int) count) + 1;
                 String line;
                 int counter = 1;
                 while ((line = br.readLine()) != null) {
                     if (counter == randomNumber) {
-                        words.add(line);
+                        stringBuil.append(line).append(" ");
+//                        words.add(line);
                         break;
                     }
                     counter++;
@@ -50,6 +45,6 @@ public class Operations {
             }
             n++;
         }
-        return words;
+        return Objects.requireNonNull(stringBuil).toString();
     }
 }
