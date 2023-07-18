@@ -35,8 +35,6 @@ public class Operations {
                 while ((line = br.readLine()) != null) {
                     if (counter == randomNumber) {
                         stringBuil.append(line).append(" ");
-                        if (n % 5 == 0 && n != 0)
-                            stringBuil.append("\n");
                         break;
                     }
                     counter++;

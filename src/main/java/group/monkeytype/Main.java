@@ -51,14 +51,15 @@ public class Main extends Application {
 //        }));
 
         TextArea textGenerated = new TextArea();
+        textGenerated.setWrapText(true);
         textGenerated.setStyle("-fx-text-fill: rgba(209, 208, 197, 0.7)");
 //        textGenerated.setStyle("-fx-background-color: rgba(53,89,119,0.4)");
 //        textGenerated.setFill(Color.rgb(209, 208, 197));
-        textGenerated.setFont(Font.font(25));
+        textGenerated.setFont(Font.font(35));
         textGenerated.setEditable(false);
 
-        TextArea textTyped = new TextArea("");
-        textTyped.setFont(Font.font(25));
+//        TextArea textTyped = new TextArea();
+//        textTyped.setFont(Font.font(25));
 //        textTyped.setStyle("-fx-background-color: transparent; -fx-opacity: 0.5;");
 
         choiceTime.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
@@ -73,23 +74,24 @@ public class Main extends Application {
             }
         });
 
-        UnaryOperator<TextFormatter.Change> textFilter = change -> {
-//            String newText = change.getControlNewText();
-            if (language == null || time == null) {
-                Alert a = new Alert(Alert.AlertType.NONE);
-                a.setAlertType(Alert.AlertType.WARNING);
-                a.setHeaderText("Choose time and language");
-                a.show();
-                return null;
-            }
-            return change;
-        };
-
-        textTyped.setTextFormatter(new TextFormatter<>(textFilter));
-        StackPane text = new StackPane(textGenerated, textTyped);
+//        UnaryOperator<TextFormatter.Change> textFilter = change -> {
+////            String newText = change.getControlNewText();
+//            if (language == null || time == null) {
+//                Alert a = new Alert(Alert.AlertType.NONE);
+//                a.setAlertType(Alert.AlertType.WARNING);
+//                a.setHeaderText("Choose time and language");
+//                a.show();
+//                return null;
+//            }
+//            return change;
+//        };
+//
+//        textTyped.setTextFormatter(new TextFormatter<>(textFilter));
+        StackPane text = new StackPane(textGenerated/*, textTyped*/);
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, 1200, 760);
-        root.setRight(text);
+//        root.setRight(text);
+        root.setCenter(textGenerated);
         root.setBottom(instructions);
         root.setTop(boxes);
         root.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
@@ -108,22 +110,23 @@ public class Main extends Application {
 //            root.setPrefHeight(newValue.doubleValue());
 //        });
 
-//        scene.setOnKeyPressed(event -> {
-//            if (event.getCode().isLetterKey() && !isInTest) {
-//                if (language == null || time == null) {
-//                    Alert a = new Alert(Alert.AlertType.NONE);
-//                    a.setAlertType(Alert.AlertType.WARNING);
-//                    a.setHeaderText("Choose time and language");
-//                    a.show();
-//                } else {
-//                    isInTest = true;
-//                }
-////                String key = event.getText();
-////                System.out.println("sheesh" + key);
-//            } else if (event.getCode().equals(KeyCode.ESCAPE)) {
-//                System.out.println("bbbbb");
-//            }
-//        });
+        scene.setOnKeyPressed(event -> {
+            if (event.getCode().isLetterKey() /*&& !isInTest*/) {
+                /*if (language == null || time == null) {
+                    Alert a = new Alert(Alert.AlertType.NONE);
+                    a.setAlertType(Alert.AlertType.WARNING);
+                    a.setHeaderText("Choose time and language");
+                    a.show();
+                } else {
+                    isInTest = true;
+                }*/
+//                String key = event.getText();
+//                System.out.println("sheesh" + key);
+
+            } else if (event.getCode().equals(KeyCode.ESCAPE)) {
+                System.out.println("bbbbb");
+            }
+        });
     }
 
     public static void main(String[] args) {
