@@ -15,6 +15,7 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 
@@ -27,11 +28,15 @@ public class Main extends Application {
     public static String language = null;
     public static String time = null;
     public static boolean isInTest = false;
+    public static int current = 0;
+    TextFlow textFlow = new TextFlow();
 
     @Override
     public void start(Stage stage) throws FileNotFoundException {
         ChoiceBox choiceTime = new ChoiceBox(FXCollections.observableArrayList("15", "20", "45", "60", "90", "120", "300"));
         ChoiceBox choiceLanguage = new ChoiceBox(FXCollections.observableArrayList(Operations.getLanguages()));
+        choiceTime.setFocusTraversable(false);
+        choiceLanguage.setFocusTraversable(false);
         HBox boxes = new HBox();
         boxes.getChildren().addAll(choiceTime, choiceLanguage);
         boxes.setSpacing(25);
@@ -49,14 +54,14 @@ public class Main extends Application {
 //        executor.execute(new Thread(() -> {
 //
 //        }));
+//        TextArea textGenerated = new TextArea();
+//        textGenerated.setStyle("-fx-text-fill: rgba(209, 208, 197, 0.7)");
+//        textGenerated.setFont(Font.font(30));
+//        textGenerated.setEditable(false);
+//        textGenerated.setWrapText(true);
+//        TextFlow textFlow = new TextFlow();
+//        textFlow.getChildren().add(textGenerated);
 
-        TextArea textGenerated = new TextArea();
-        textGenerated.setWrapText(true);
-        textGenerated.setStyle("-fx-text-fill: rgba(209, 208, 197, 0.7)");
-//        textGenerated.setStyle("-fx-background-color: rgba(53,89,119,0.4)");
-//        textGenerated.setFill(Color.rgb(209, 208, 197));
-        textGenerated.setFont(Font.font(35));
-        textGenerated.setEditable(false);
 
 //        TextArea textTyped = new TextArea();
 //        textTyped.setFont(Font.font(25));
@@ -65,10 +70,20 @@ public class Main extends Application {
         choiceTime.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             time = (String) choiceTime.getItems().get(newValue.intValue());
         });
+
         choiceLanguage.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
             language = (String) choiceLanguage.getItems().get(newValue.intValue());
             try {
-                textGenerated.setText(Operations.readWords());
+                textFlow.getChildren().clear();
+                String string = Operations.readWords();
+
+                for (int i = 0; i < string.length(); i++) {
+                    char letter = string.charAt(i);
+                    Text text = new Text(Character.toString(letter));
+                    text.setFill(Color.rgb(209, 208, 197));
+                    text.setFont(Font.font(30));
+                    textFlow.getChildren().add(text);
+                }
             } catch (FileNotFoundException e) {
                 throw new RuntimeException(e);
             }
@@ -87,11 +102,10 @@ public class Main extends Application {
 //        };
 //
 //        textTyped.setTextFormatter(new TextFormatter<>(textFilter));
-        StackPane text = new StackPane(textGenerated/*, textTyped*/);
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, 1200, 760);
 //        root.setRight(text);
-        root.setCenter(textGenerated);
+        root.setCenter(textFlow);
         root.setBottom(instructions);
         root.setTop(boxes);
         root.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
@@ -111,21 +125,46 @@ public class Main extends Application {
 //        });
 
         scene.setOnKeyPressed(event -> {
-            if (event.getCode().isLetterKey() /*&& !isInTest*/) {
-                /*if (language == null || time == null) {
-                    Alert a = new Alert(Alert.AlertType.NONE);
-                    a.setAlertType(Alert.AlertType.WARNING);
-                    a.setHeaderText("Choose time and language");
-                    a.show();
-                } else {
-                    isInTest = true;
-                }*/
-//                String key = event.getText();
-//                System.out.println("sheesh" + key);
-
-            } else if (event.getCode().equals(KeyCode.ESCAPE)) {
-                System.out.println("bbbbb");
+            if (language == null || time == null) {
+                Alert a = new Alert(Alert.AlertType.NONE);
+                a.setAlertType(Alert.AlertType.WARNING);
+                a.setHeaderText("Choose time and language");
+                a.show();
+            } else {
+                if ((event.getCode().isLetterKey() /*&& !isInTest*/)) {
+                    /*if (!isInTest)
+                        isInTest = true;*/
+                    Text currentText = (Text) textFlow.getChildren().get(current);
+                    if (currentText.getText().equals(event.getText()))
+                        currentText.setFill(Color.rgb(55, 255, 55));
+                    else if (currentText.getText().equals(" "))
+                        current--;
+                    else
+                        currentText.setFill(Color.rgb(255, 55, 55));
+                    current++;
+                } else if (event.getCode().equals(KeyCode.BACK_SPACE)) {
+                    Text previousText = (Text) textFlow.getChildren().get(current - 1);
+                    if (current > 0 && !previousText.getText().equals(" ")) {
+                        previousText.setFill(Color.rgb(209, 208, 197));
+                        current--;
+                    }
+                } else if (event.getCode().equals(KeyCode.SPACE)) {
+                    Text currentText = (Text) textFlow.getChildren().get(current);
+                    if (currentText.getText().equals(" ")) {
+                        current++;
+                    } else {
+                        do {
+                            Text futureText = (Text) textFlow.getChildren().get(current);
+                            if (!Character.isLetter(futureText.getText().charAt(0))) {
+                                current++;
+                                break;
+                            } else
+                                current++;
+                        } while (true);
+                    }
+                }
             }
+
         });
     }
 

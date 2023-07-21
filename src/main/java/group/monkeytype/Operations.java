@@ -1,9 +1,15 @@
 package group.monkeytype;
 
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
