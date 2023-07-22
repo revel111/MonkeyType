@@ -1,5 +1,6 @@
 package group.monkeytype;
 
+import javafx.application.Platform;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -33,8 +34,8 @@ public class Operations {
         Random random = new Random();
         int n = 0;
         while (n < 30) {
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("dictionary/" + Main.language + ".txt"), StandardCharsets.UTF_8))) {
-                long count = Files.lines(Paths.get("dictionary/" + Main.language + ".txt")).count();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("dictionary/" + Main.getLanguage() + ".txt"), StandardCharsets.UTF_8))) {
+                long count = Files.lines(Paths.get("dictionary/" + Main.getLanguage() + ".txt")).count();
                 int randomNumber = random.nextInt((int) count) + 1;
                 String line;
                 int counter = 1;
@@ -51,5 +52,58 @@ public class Operations {
             n++;
         }
         return Objects.requireNonNull(stringBuil).toString();
+    }
+
+    public static synchronized void game() {
+        new Thread(() -> {
+            try {
+                Thread.sleep(Main.getTime() * 1000L);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            Main.setIsInTest(false);
+        }).start();
+    }
+
+
+    public static void fillTextFlow() throws FileNotFoundException {
+        Main.getTextFlow().getChildren().clear();
+        String string = Operations.readWords();
+
+        for (int i = 0; i < string.length(); i++) {
+            char letter = string.charAt(i);
+            Text text = new Text(Character.toString(letter));
+            text.setFill(Color.rgb(209, 208, 197));
+            text.setFont(Font.font(30));
+            Main.getTextFlow().getChildren().add(text);
+        }
+    }
+
+    public static synchronized void timer() {
+        new Thread(() -> {
+            int curTime = Main.getTime();
+            while (Main.getTime() > 0) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                Main.setTime(Main.getTime() - 1);
+                Platform.runLater(() -> Main.getLabel().setText(Integer.toString(Main.getTime())));
+            }
+
+            Main.setIsInTest(false);
+            Main.setCurrent(0);
+            Main.setTime(curTime);
+            Platform.runLater(() -> {
+                try {
+                    Operations.fillTextFlow();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+                Main.getChoiceTime().setDisable(false);
+                Main.getChoiceLanguage().setDisable(false);
+            });
+        }).start();
     }
 }
