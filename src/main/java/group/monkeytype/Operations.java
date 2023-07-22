@@ -54,18 +54,6 @@ public class Operations {
         return Objects.requireNonNull(stringBuil).toString();
     }
 
-    public static synchronized void game() {
-        new Thread(() -> {
-            try {
-                Thread.sleep(Main.getTime() * 1000L);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            Main.setIsInTest(false);
-        }).start();
-    }
-
-
     public static void fillTextFlow() throws FileNotFoundException {
         Main.getTextFlow().getChildren().clear();
         String string = Operations.readWords();

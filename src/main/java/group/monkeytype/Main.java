@@ -179,9 +179,9 @@ public class Main extends Application {
                             } while (true);
                         }
                     }
-                } else if (event.getCode().equals(KeyCode.ESCAPE)) {
+                } /*else if (event.getCode().equals(KeyCode.ESCAPE)) {
 
-                }
+                }*/
             }
         });
     }
