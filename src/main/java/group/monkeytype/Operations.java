@@ -4,14 +4,11 @@ import javafx.application.Platform;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.temporal.Temporal;
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
 
@@ -19,7 +16,7 @@ public class Operations {
     public static String[] getLanguages() {
         File folder = new File("dictionary");
         File[] list = folder.listFiles();
-        String[] strings = new String[list.length];
+        String[] strings = new String[Objects.requireNonNull(list).length];
 
         for (int i = 0; i < list.length; i++) {
             strings[i] = list[i].getName();
@@ -29,7 +26,7 @@ public class Operations {
         return strings;
     }
 
-    public static String readWords() throws FileNotFoundException {
+    public static String readWords() {
         StringBuilder stringBuil = new StringBuilder();
         Random random = new Random();
         int n = 0;

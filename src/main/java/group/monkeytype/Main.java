@@ -143,16 +143,30 @@ public class Main extends Application {
                         Operations.timer();
                     }
                     Text currentText = (Text) textFlow.getChildren().get(current);
-                    if (currentText.getText().equals(event.getText()))
-                        currentText.setFill(Color.rgb(55, 255, 55));
-                    else if (currentText.getText().equals(" "))
-                        current--;
-                    else
-                        currentText.setFill(Color.rgb(255, 55, 55));
-                    current++;
+                    Text previousText = null;
+                    if (current != 0)
+                        previousText = (Text) textFlow.getChildren().get(current - 1);
+
+                    if (currentText.getText().equals(" ") && Objects.requireNonNull(previousText).getText().equals(event.getText())) {
+                        Text copy = new Text(previousText.getText());
+                        copy.setFont(Font.font(30));
+                        copy.setFill(Color.rgb(255, 127, 80));
+                        textFlow.getChildren().add(current, copy);
+                        current++;
+                    }
+                    if (!currentText.getText().equals(" ")) {
+                        if (currentText.getText().equals(event.getText()))
+                            currentText.setFill(Color.rgb(55, 255, 55));
+                        else
+                            currentText.setFill(Color.rgb(255, 55, 55));
+                        current++;
+                    }
                 } else if (event.getCode().equals(KeyCode.BACK_SPACE) && current != 0) {
                     Text previousText = (Text) textFlow.getChildren().get(current - 1);
-                    if (current > 0 && !previousText.getText().equals(" ")) {
+                    if (previousText.getFill().equals(Color.rgb(255, 127, 80))) {
+                        textFlow.getChildren().remove(current - 1);
+                        current--;
+                    } else if (current > 0 && !previousText.getText().equals(" ")) {
                         previousText.setFill(Color.rgb(209, 208, 197));
                         current--;
                     }
@@ -179,9 +193,9 @@ public class Main extends Application {
                             } while (true);
                         }
                     }
-                } /*else if (event.getCode().equals(KeyCode.ESCAPE)) {
+                } else if (event.getCode().equals(KeyCode.ESCAPE)) {
 
-                }*/
+                }
             }
         });
     }
