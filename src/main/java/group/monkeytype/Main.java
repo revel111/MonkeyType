@@ -24,7 +24,9 @@ import java.util.Objects;
 public class Main extends Application {
     private static String language = null;
     private static int time = 0;
+    private static int genTime = 0;
     private static boolean isInTest = false;
+    private static boolean isPaused = false;
     private static int current = 0;
     private static final TextFlow textFlow = new TextFlow();
     private static final Label label = new Label("0");
@@ -39,12 +41,20 @@ public class Main extends Application {
         return time;
     }
 
-    public static Label getLabel() {
-        return label;
+    public static int getGenTime() {
+        return genTime;
+    }
+
+    public static boolean isIsPaused() {
+        return isPaused;
     }
 
     public static TextFlow getTextFlow() {
         return textFlow;
+    }
+
+    public static Label getLabel() {
+        return label;
     }
 
     public static ChoiceBox getChoiceTime() {
@@ -63,6 +73,10 @@ public class Main extends Application {
         Main.isInTest = isInTest;
     }
 
+    public static void setIsPaused(boolean isPaused) {
+        Main.isPaused = isPaused;
+    }
+
     public static void setCurrent(int current) {
         Main.current = current;
     }
@@ -77,12 +91,12 @@ public class Main extends Application {
         boxes.setPadding(new Insets(15, 0, 35, 520));
 
         HBox instructions = new HBox();
-        ImageView footer = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/footer.png")));
+        ImageView footer = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/footer.png")));
         instructions.getChildren().add(footer);
         instructions.setPadding(new Insets(0, 0, -100, 370));
 
         VBox clock = new VBox();
-        ImageView sandClock = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/clock.png")));
+        ImageView sandClock = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/clock.png")));
         label.setTextFill(Color.rgb(209, 208, 197));
         label.setFont(Font.font(25));
         label.setPadding(new Insets(25, 0, 0, 10));
@@ -95,6 +109,7 @@ public class Main extends Application {
             String timeS = (String) choiceTime.getItems().get(newValue.intValue());
             label.setText(timeS);
             time = Integer.parseInt(timeS);
+            genTime = Integer.parseInt(timeS);
         });
 
         choiceLanguage.getSelectionModel().selectedIndexProperty().addListener((observable, oldValue, newValue) -> {
@@ -114,12 +129,11 @@ public class Main extends Application {
         root.setTop(boxes);
         root.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
 
-        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/monkeytype/background.css")).toExternalForm());
         stage.setScene(scene);
         stage.show();
         stage.setTitle("MonkeyType");
         stage.setResizable(true);
-        stage.getIcons().add(new Image(new FileInputStream("src/main/resources/monkeytype/icon.png")));
+        stage.getIcons().add(new Image(new FileInputStream("src/main/resources/monkeytype/images/icon.png")));
 
 //        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
 //            root.setPrefWidth(newValue.doubleValue());
@@ -142,6 +156,8 @@ public class Main extends Application {
                         choiceLanguage.setDisable(true);
                         Operations.timer();
                     }
+                    if(isPaused)
+                        isPaused = false;
                     Text currentText = (Text) textFlow.getChildren().get(current);
                     Text previousText = null;
                     if (current != 0)
@@ -188,16 +204,28 @@ public class Main extends Application {
                                 if (!Character.isLetter(futureText.getText().charAt(0))) {
                                     current++;
                                     break;
-                                } else
-                                    current++;
+                                }
+                                current++;
+                                futureText.setFill(Color.rgb(130, 130, 130));
                             } while (true);
                         }
                     }
-                } else if (event.getCode().equals(KeyCode.ESCAPE)) {
-
+                } else if (event.getCode().equals(KeyCode.ESCAPE))
+                    time = 0;
+                else if (event.getCode().equals(KeyCode.SHIFT)) {
+//                    Operations.restart();
+                    Operations.pause();
                 }
+
+
             }
         });
+/*        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
+            // Check if the pressed keys are "Enter" + "Tab"
+            if (event.getCode() == KeyCode.ENTER && event.isShortcutDown()) {
+                System.out.println("shehsauea");// Fire the button event
+            }
+        });*/
     }
 
     public static void main(String[] args) {
