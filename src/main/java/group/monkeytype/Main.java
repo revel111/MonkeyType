@@ -1,8 +1,10 @@
 package group.monkeytype;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
+import javafx.print.PageLayout;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceBox;
@@ -16,6 +18,9 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -85,17 +90,17 @@ public class Main extends Application {
     public void start(Stage stage) throws FileNotFoundException {
         choiceTime.setFocusTraversable(false);
         choiceLanguage.setFocusTraversable(false);
-        HBox boxes = new HBox();
+        final HBox boxes = new HBox();
         boxes.getChildren().addAll(choiceTime, choiceLanguage);
         boxes.setSpacing(25);
         boxes.setPadding(new Insets(15, 0, 35, 520));
 
-        HBox instructions = new HBox();
+        final HBox instructions = new HBox();
         ImageView footer = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/footer.png")));
         instructions.getChildren().add(footer);
         instructions.setPadding(new Insets(0, 0, -100, 370));
 
-        VBox clock = new VBox();
+        final VBox clock = new VBox();
         ImageView sandClock = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/clock.png")));
         label.setTextFill(Color.rgb(209, 208, 197));
         label.setFont(Font.font(25));
@@ -121,8 +126,21 @@ public class Main extends Application {
             }
         });
 
-        BorderPane root = new BorderPane();
-        Scene scene = new Scene(root, 1200, 760);
+        final NumberAxis xAxis = new NumberAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        final LineChart<Number, Number> lineChart = new LineChart<>(xAxis, yAxis);
+        lineChart.setTitle("Statistic");
+        XYChart.Series series = new XYChart.Series();
+        series.setName("WPM");
+        series.getData().add(new XYChart.Data<>(1, 23));
+        lineChart.getData().add(series);
+
+        final BorderPane root = new BorderPane();
+        final BorderPane chart = new BorderPane();
+        final StackPane stackPane = new StackPane(root, chart);
+        final Scene scene = new Scene(stackPane, 1200, 760);
+        chart.setCenter(lineChart);
+        chart.setVisible(false);
         root.setLeft(clock);
         root.setCenter(textFlow);
         root.setBottom(instructions);
@@ -142,6 +160,17 @@ public class Main extends Application {
 //            root.setPrefHeight(newValue.doubleValue());
 //        });
 
+//        new Thread(() -> {
+//            while (time > 0 && !isInTest) {
+//                try {
+//                    Thread.sleep(100);
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//            Platform.runLater(() -> root.setVisible(false));
+//        }).start();
+
         scene.setOnKeyPressed(event -> {
             if (language == null || time == -1) {
                 Alert a = new Alert(Alert.AlertType.NONE);
@@ -156,8 +185,8 @@ public class Main extends Application {
                         choiceLanguage.setDisable(true);
                         Operations.timer();
                     }
-                    if(isPaused)
-                        isPaused = false;
+                    if (isPaused)
+                        Operations.resume();
                     Text currentText = (Text) textFlow.getChildren().get(current);
                     Text previousText = null;
                     if (current != 0)
@@ -196,10 +225,22 @@ public class Main extends Application {
                         current = 0;
                     } else {
                         Text currentText = (Text) textFlow.getChildren().get(current);
-                        if (currentText.getText().equals(" "))
+                        if (currentText.getText().equals(" ")) {
+                            int counter = current - 1;
+                            StringBuilder word = new StringBuilder();
+                            while (true) {
+                                Text previousText = (Text) textFlow.getChildren().get(counter);
+                                if (previousText.getText().equals(" ") || counter == 0) {
+                                    word.append(" -> ").append((int) ((Operations.getRecords().size() + 1) / (((double) genTime - (double) time) / 60))); //or gentime
+                                    Operations.getRecords().add(word.toString());
+                                    break;
+                                }
+                                word.append(previousText.getText());
+                                counter--;
+                            }
                             current++;
-                        else {
-                            do {
+                        } else
+                            while (true) {
                                 Text futureText = (Text) textFlow.getChildren().get(current);
                                 if (!Character.isLetter(futureText.getText().charAt(0))) {
                                     current++;
@@ -207,19 +248,19 @@ public class Main extends Application {
                                 }
                                 current++;
                                 futureText.setFill(Color.rgb(130, 130, 130));
-                            } while (true);
-                        }
+                            }
                     }
                 } else if (event.getCode().equals(KeyCode.ESCAPE))
                     time = 0;
                 else if (event.getCode().equals(KeyCode.SHIFT)) {
 //                    Operations.restart();
-                    Operations.pause();
+//                    Operations.pause();
+                    root.setVisible(!root.isVisible());
+                    chart.setVisible(!chart.isVisible());
                 }
-
-
             }
         });
+
 /*        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             // Check if the pressed keys are "Enter" + "Tab"
             if (event.getCode() == KeyCode.ENTER && event.isShortcutDown()) {
