@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -77,7 +76,7 @@ public class Operations {
     }
 
     public static void fillTextFlow() throws FileNotFoundException {
-        Main.getTextFlow().getChildren().clear();
+        Main.getMainText().getChildren().clear();
         String string;
         try {
             string = Operations.readWords();
@@ -90,7 +89,7 @@ public class Operations {
             Text text = new Text(Character.toString(letter));
             text.setFill(Color.rgb(209, 208, 197));
             text.setFont(Font.font(30));
-            Main.getTextFlow().getChildren().add(text);
+            Main.getMainText().getChildren().add(text);
         }
     }
 
@@ -148,8 +147,8 @@ public class Operations {
 
     public static void restart() {
         Platform.runLater(() -> {
-            for (int i = 0; i < Main.getTextFlow().getChildren().size(); i++) {
-                Text text = (Text) Main.getTextFlow().getChildren().get(i);
+            for (int i = 0; i < Main.getMainText().getChildren().size(); i++) {
+                Text text = (Text) Main.getMainText().getChildren().get(i);
                 text.setFill(Color.rgb(209, 208, 197));
             }
         });
@@ -161,8 +160,8 @@ public class Operations {
     public static void calcResult() {
         int correct = 0, incorrect = 0, extra = 0, missed = 0, accuracy = 0, wpm  = (int) ((Operations.getRecords().size() + 1) / ((double) Main.getGenTime() / 60));;
 
-        for (int i = 0; i < Main.getTextFlow().getChildren().size(); i++) {
-            Text text = (Text) Main.getTextFlow().getChildren().get(i);
+        for (int i = 0; i < Main.getMainText().getChildren().size(); i++) {
+            Text text = (Text) Main.getMainText().getChildren().get(i);
             if (text.getFill().equals(Color.rgb(55, 255, 55)))
                 correct++;
             else if (text.getFill().equals(Color.rgb(255, 55, 55)))
