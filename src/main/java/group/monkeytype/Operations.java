@@ -159,7 +159,7 @@ public class Operations {
     }
 
     public static void calcResult() {
-        int correct = 0, incorrect = 0, extra = 0, missed = 0, accuracy = 0, wpm  = (int) ((Operations.getRecords().size() + 1) / ((double) Main.getGenTime() / 60));;
+        int correct = 0, incorrect = 0, extra = 0, missed = 0, accuracy = 0, wpm  = (int) ((Operations.getRecords().size() + 1) / ((double) Main.getGenTime() / 60));
 
         for (int i = 0; i < Main.getTextFlow().getChildren().size(); i++) {
             Text text = (Text) Main.getTextFlow().getChildren().get(i);
