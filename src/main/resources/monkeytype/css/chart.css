@@ -1,0 +1,9 @@
+.custom-line-chart .chart-plot-background {
+    -fx-background-color: #202225;
+}
+
+.custom-line-chart .series0 .line {
+    -fx-stroke: #e2b714;
+    -fx-stroke-type: centered;
+    -fx-stroke-width: 0px;
+}

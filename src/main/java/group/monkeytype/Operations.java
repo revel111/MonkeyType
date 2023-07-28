@@ -1,6 +1,8 @@
 package group.monkeytype;
 
 import javafx.application.Platform;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
@@ -96,9 +98,10 @@ public class Operations {
     public static synchronized void timer() {
         new Thread(() -> {
             int curTime = Main.getTime();
+            int i = 0;
             while (Main.getTime() > 0) {
                 synchronized (monitor) {
-                    while (Main.isIsPaused())
+                    while (Main.isPaused())
                         try {
                             monitor.wait();
                         } catch (InterruptedException e) {
@@ -111,12 +114,20 @@ public class Operations {
                     throw new RuntimeException(e);
                 }
                 Main.setTime(Main.getTime() - 1);
-                Platform.runLater(() -> Main.getLabel().setText(Integer.toString(Main.getTime())));
+                int finalI = i;
+                Platform.runLater(() -> {
+                    Main.getTimeL().setText(Integer.toString(Main.getTime()));
+                    Main.getSeries().getData().add(new XYChart.Data<>(finalI, (Operations.getRecords().size()) / (((double) Main.getGenTime() - (double) Main.getTime()) / 60)));
+                });
+                i++;
             }
 
-            Main.setIsInTest(false);
+            Main.setInStat(true);
+            Main.setInTest(false);
             Main.setCurrent(0);
             Main.setTime(curTime);
+            Operations.calcResult();
+            Operations.createFile();
             Platform.runLater(() -> {
                 try {
                     Operations.fillTextFlow();
@@ -125,22 +136,22 @@ public class Operations {
                 }
                 Main.getChoiceTime().setDisable(false);
                 Main.getChoiceLanguage().setDisable(false);
+                Main.getChart().setVisible(true);
+                Main.getRoot().setVisible(false);
             });
-            Operations.calcResult();
-            Operations.createFile();
             Operations.getRecords().clear();
         }).start();
     }
 
-//    public static void pause() {
-//        synchronized (monitor) {
-//            Main.setIsPaused(true);
-//        }
-//    }
+    public static void pause() {
+        synchronized (monitor) {
+            Main.setPaused(true);
+        }
+    }
 
     public static void resume() {
         synchronized (monitor) {
-            Main.setIsPaused(false);
+            Main.setPaused(false);
             monitor.notify();
         }
     }
@@ -158,7 +169,7 @@ public class Operations {
     }
 
     public static void calcResult() {
-        int correct = 0, incorrect = 0, extra = 0, missed = 0, accuracy = 0, wpm  = (int) ((Operations.getRecords().size() + 1) / ((double) Main.getGenTime() / 60));
+        int correct = 0, incorrect = 0, extra = 0, missed = 0;
 
         for (int i = 0; i < Main.getMainText().getChildren().size(); i++) {
             Text text = (Text) Main.getMainText().getChildren().get(i);
@@ -171,12 +182,32 @@ public class Operations {
             else if (text.getFill().equals(Color.rgb(130, 130, 130)))
                 missed++;
         }
+
         try {
-            accuracy = correct * 100 / (correct + incorrect + extra + missed);
+            int finalCorrect = correct, finalIncorrect = incorrect, finalExtra = extra, finalMissed = missed;
+            Platform.runLater(() -> {
+                Main.getAccP().setText(Integer.toString(finalCorrect * 100 / (finalCorrect + finalIncorrect + finalExtra + finalMissed)));
+                Main.getWpmP().setText(Integer.toString((int) ((Operations.getRecords().size() + 1) / ((double) Main.getGenTime() / 60))));
+                Main.getCharactersP().setText(finalCorrect + "/" + finalIncorrect + "/" + finalExtra + "/" + finalMissed);
+                Main.getLanguageP().setText(Main.getLanguage());
+                Main.getTimeP().setText(Integer.toString(Main.getGenTime()));
+            });
         } catch (ArithmeticException e) {
-            //smth
+            Main.getAccP().setText("0");
+        }
+    }
+
+    public static Label labelCreate(String text, int choose) {
+        Label label = new Label(text);
+
+        if (choose == 1) {
+            label.setTextFill(Color.rgb(209, 208, 197, 0.5));
+            label.setFont(Font.font(20));
+        } else {
+            label.setTextFill(Color.rgb(226, 183, 20));
+            label.setFont(Font.font(32));
         }
 
-        System.out.println(correct + "/" + incorrect + "/" + extra + "/" + missed + " accuracy:" + accuracy);
+        return label;
     }
 }
