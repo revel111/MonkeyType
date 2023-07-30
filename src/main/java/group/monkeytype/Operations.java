@@ -149,7 +149,17 @@ public class Operations {
                 Main.getTextPane().setVisible(false);
             });
 
-            records.clear();
+            while (Main.isInStat())
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+
+            Platform.runLater(() -> {
+                records.clear();
+                Main.getSeries().getData().clear();
+            });
         }).start();
     }
 
@@ -172,11 +182,12 @@ public class Operations {
                 Text text = (Text) Main.getMainText().getChildren().get(i);
                 text.setFill(Color.rgb(209, 208, 197));
             }
+            Main.getSeries().getData().clear();
         });
 
+        records.clear();
         Main.setCurrent(0);
         Main.setTime(Main.getGenTime());
-        records.clear();
     }
 
     public static void calcResult() {

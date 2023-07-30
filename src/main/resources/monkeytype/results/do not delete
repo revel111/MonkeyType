@@ -1,0 +1,2 @@
+This empty file was created to prevent bug(or feature) related with github, when after pulling/cloning project, it does not pull/clone empty directories.
+This current directory exists because here program stores the results of the tests.

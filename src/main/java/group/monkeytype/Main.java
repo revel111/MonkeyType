@@ -64,6 +64,10 @@ public class Main extends Application {
         return paused;
     }
 
+    public static boolean isInStat() {
+        return inStat;
+    }
+
     public static BorderPane getTextPane() {
         return textPane;
     }
@@ -244,12 +248,7 @@ public class Main extends Application {
         stage.setResizable(true);
         stage.getIcons().add(new Image(new FileInputStream("src/main/resources/monkeytype/images/icon.png")));
 
-//        scene.widthProperty().addListener((observable, oldValue, newValue) -> {
-//            root.setPrefWidth(newValue.doubleValue());
-//        });
-//        scene.heightProperty().addListener((observable, oldValue, newValue) -> {
-//            root.setPrefHeight(newValue.doubleValue());
-//        });
+
 
         scene.setOnKeyPressed(event -> {
             KeyCodeCombination ctrlShiftP = new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN);
