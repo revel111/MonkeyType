@@ -5,17 +5,19 @@ import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
@@ -33,8 +35,8 @@ public class Main extends Application {
     private static boolean paused = false;
     private static boolean inStat = false;
     private static int current = 0;
-    private static final BorderPane root = new BorderPane();
-    private static final BorderPane chart = new BorderPane();
+    private static final BorderPane textPane = new BorderPane();
+    private static final BorderPane chartPane = new BorderPane();
     private static final TextFlow mainText = new TextFlow();
     private static final Label timeL = new Label(Integer.toString(time));
     private static final ChoiceBox choiceTime = new ChoiceBox(FXCollections.observableArrayList("15", "20", "45", "60", "90", "120", "300"));
@@ -62,12 +64,12 @@ public class Main extends Application {
         return paused;
     }
 
-    public static BorderPane getRoot() {
-        return root;
+    public static BorderPane getTextPane() {
+        return textPane;
     }
 
-    public static BorderPane getChart() {
-        return chart;
+    public static BorderPane getChartPane() {
+        return chartPane;
     }
 
     public static TextFlow getMainText() {
@@ -126,10 +128,6 @@ public class Main extends Application {
         Main.inStat = inStat;
     }
 
-    public static int getCurrent() {
-        return current;
-    }
-
     public static void setCurrent(int current) {
         Main.current = current;
     }
@@ -144,23 +142,28 @@ public class Main extends Application {
         choiceTime.setFocusTraversable(false);
         choiceLanguage.setFocusTraversable(false);
 
-        final HBox boxes = new HBox();
-        boxes.getChildren().addAll(choiceTime, choiceLanguage);
+        final HBox boxes = new HBox(choiceTime, choiceLanguage);
         boxes.setSpacing(25);
         boxes.setPadding(new Insets(15, 0, 35, 520));
 
-        final HBox instructions = new HBox();
-        ImageView footer = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/footer.png")));
-        instructions.getChildren().add(footer);
+        final HBox instructions = new HBox(new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/footer.png"))));
         instructions.setPadding(new Insets(0, 0, -100, 370));
 
-        final VBox clock = new VBox();
-        ImageView sandClock = new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/clock.png")));
+        final Label refreshLabel = new Label("refresh");
+        final Button refreshButton = new Button();
+        final VBox clockRefresh = new VBox(new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/clock.png"))), timeL, refreshLabel, refreshButton);
+
+        refreshLabel.setTextFill(Color.rgb(209, 208, 197));
+        refreshLabel.setFont(Font.font(15));
+        refreshLabel.setPadding(new Insets(200, 0, 15, 5));
+        refreshButton.getStyleClass().add("custom-button");
+        refreshButton.setFocusTraversable(false);
+        refreshButton.setGraphic(new ImageView(new Image(new FileInputStream("src/main/resources/monkeytype/images/refresh.png"))));
+        Operations.playButAnim(refreshButton);
+
         timeL.setTextFill(Color.rgb(209, 208, 197));
         timeL.setFont(Font.font(25));
         timeL.setPadding(new Insets(25, 0, 0, 10));
-        timeL.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
-        clock.getChildren().addAll(sandClock, timeL);
 
         mainText.setPadding(new Insets(100, 0, 0, 50));
 
@@ -180,39 +183,60 @@ public class Main extends Application {
             }
         });
 
+        refreshButton.setOnAction(event -> {
+            if (!inTest && language != null)
+                try {
+                    Operations.fillTextFlow();
+                } catch (FileNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+        });
+
         final LineChart<Number, Number> lineChart = new LineChart<>(new NumberAxis(), new NumberAxis());
-        lineChart.setTitle("Statistic");
-        lineChart.getData().add(series);
-        lineChart.getStyleClass().add("custom-line-chart");
-        series.setName("WPM");
 
         final Label wpm = Operations.labelCreate("wpm", 1);
         final Label acc = Operations.labelCreate("acc", 1);
         final Label testType = Operations.labelCreate("test type:", 1);
         final Label characters = Operations.labelCreate("characters: ", 1);
         final Label timeLab = Operations.labelCreate("time:", 1);
+
         final VBox chartLeft = new VBox(wpm, wpmP, acc, accP, testType, timeLab, timeP, languageP);
         final HBox chartBottom = new HBox(characters, charactersP);
+
+        Label popupLabel = new Label("correct/incorrect/extra/omitted");
+        popupLabel.setStyle("-fx-background-color: #202225; -fx-padding: 5px; -fx-text-fill: #d1d0c5");
+        Popup popup = new Popup();
+        popup.getContent().add(popupLabel);
+
+        charactersP.setOnMouseEntered(event -> popup.show(stage, event.getScreenX() + 10, event.getScreenY() + 10));
+        charactersP.setOnMouseExited(event -> popup.hide());
+
+        final StackPane root = new StackPane(textPane, chartPane);
+        final Scene scene = new Scene(root, 1200, 760);
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/monkeytype/css/chart.css")).toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/monkeytype/css/button.css")).toExternalForm());
+
+        lineChart.setTitle("Statistic");
+        lineChart.getData().add(series);
+        lineChart.getStyleClass().add("custom-line-chart");
+        series.setName("WPM");
+
         chartLeft.setSpacing(10);
         chartBottom.setSpacing(10);
         chartLeft.setPadding(new Insets(200, 0, 0, 0));
         chartBottom.setPadding(new Insets(0, 0, 0, 50));
 
-        final StackPane stackPane = new StackPane(root, chart);
-        final Scene scene = new Scene(stackPane, 1200, 760);
-        scene.getStylesheets().add(getClass().getResource("/monkeytype/css/chart.css").toExternalForm());
+        chartPane.setCenter(lineChart);
+        chartPane.setLeft(chartLeft);
+        chartPane.setBottom(chartBottom);
+        chartPane.setVisible(false);
+        chartPane.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
 
-        chart.setCenter(lineChart);
-        chart.setLeft(chartLeft);
-        chart.setBottom(chartBottom);
-        chart.setVisible(false);
-        chart.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
-
-        root.setLeft(clock);
-        root.setCenter(mainText);
-        root.setBottom(instructions);
-        root.setTop(boxes);
-        root.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
+        textPane.setLeft(clockRefresh);
+        textPane.setCenter(mainText);
+        textPane.setBottom(instructions);
+        textPane.setTop(boxes);
+        textPane.setBackground(new Background(new BackgroundFill(Color.rgb(32, 34, 37), new CornerRadii(0), Insets.EMPTY)));
 
         stage.setScene(scene);
         stage.show();
@@ -228,21 +252,30 @@ public class Main extends Application {
 //        });
 
         scene.setOnKeyPressed(event -> {
+            KeyCodeCombination ctrlShiftP = new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN);
             if (language == null || time == -1) {
                 Alert a = new Alert(Alert.AlertType.NONE);
                 a.setAlertType(Alert.AlertType.WARNING);
                 a.setHeaderText("Choose time and language");
                 a.show();
             } else {
-                if ((event.getCode().isLetterKey()) && !inStat) {
+                if (event.getCode() == KeyCode.TAB && !inStat)
+                    scene.addEventFilter(KeyEvent.KEY_PRESSED, enterEvent -> {
+                        if (enterEvent.getCode() == KeyCode.ENTER)
+                            Operations.restart();
+                    });
+                else if (ctrlShiftP.match(event) && !inStat)
+                    if (paused)
+                        Operations.resume();
+                    else
+                        Operations.pause();
+                else if ((event.getCode().isLetterKey()) && !inStat && !paused) {
                     if (!inTest) {
                         inTest = true;
                         choiceTime.setDisable(true);
                         choiceLanguage.setDisable(true);
                         Operations.timer();
                     }
-                    if (paused)
-                        Operations.resume();
                     Text currentText = (Text) mainText.getChildren().get(current);
                     Text previousText = null;
                     if (current != 0)
@@ -253,6 +286,7 @@ public class Main extends Application {
                         copy.setFont(Font.font(30));
                         copy.setFill(Color.rgb(255, 127, 80));
                         mainText.getChildren().add(current, copy);
+                        Operations.playWaveAnim(copy);
                         current++;
                     } else if (!currentText.getText().equals(" ")) {
                         if (currentText.getText().equals(event.getText()))
@@ -260,6 +294,7 @@ public class Main extends Application {
                         else
                             currentText.setFill(Color.rgb(255, 55, 55));
                         current++;
+                        Operations.playWaveAnim(currentText);
                     }
                 } else if (event.getCode().equals(KeyCode.BACK_SPACE) && current != 0) {
                     Text previousText = (Text) mainText.getChildren().get(current - 1);
@@ -269,8 +304,9 @@ public class Main extends Application {
                     } else if (current > 0 && !previousText.getText().equals(" ")) {
                         previousText.setFill(Color.rgb(209, 208, 197));
                         current--;
+                        Operations.playWaveAnim(previousText);
                     }
-                } else if (event.getCode().equals(KeyCode.SPACE)) {
+                } else if (event.getCode().equals(KeyCode.SPACE) && inTest) {
                     if (current == mainText.getChildren().size() || current == mainText.getChildren().size() - 1) {
                         try {
                             Operations.fillTextFlow();
@@ -303,28 +339,18 @@ public class Main extends Application {
                                 }
                                 current++;
                                 futureText.setFill(Color.rgb(130, 130, 130));
+                                Operations.playWaveAnim(futureText);
                             }
                     }
-                } else if (event.getCode().equals(KeyCode.ESCAPE)) {
+                } else if (event.getCode().equals(KeyCode.ESCAPE))
                     if (inStat) {
-                        root.setVisible(true);
-                        chart.setVisible(false);
+                        textPane.setVisible(true);
+                        chartPane.setVisible(false);
                         inStat = !inStat;
                     } else if (inTest)
                         time = 0;
-                } else if (event.getCode().equals(KeyCode.SHIFT)) {
-//                    Operations.restart();
-//                    Operations.pause();
-                }
             }
         });
-
-/*        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            // Check if the pressed keys are "Enter" + "Tab"
-            if (event.getCode() == KeyCode.ENTER && event.isShortcutDown()) {
-                System.out.println("shehsauea");// Fire the button event
-            }
-        });*/
     }
 
     public static void main(String[] args) {

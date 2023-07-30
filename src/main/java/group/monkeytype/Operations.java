@@ -1,11 +1,16 @@
 package group.monkeytype;
 
+import javafx.animation.Animation;
+import javafx.animation.RotateTransition;
+import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -69,8 +74,7 @@ public class Operations {
         String name = "src/main/resources/monkeytype/results/" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss")) + ".txt";
 
         try (FileWriter bw = new FileWriter(name, true)) {
-            for (int i = 0; i < Operations.getRecords().size(); i++)
-                bw.write(Operations.getRecords().get(i) + "\n");
+            for (String record : records) bw.write(record + "\n");
             bw.write("\n");
         } catch (IOException e) {
             e.printStackTrace();
@@ -80,6 +84,7 @@ public class Operations {
     public static void fillTextFlow() throws FileNotFoundException {
         Main.getMainText().getChildren().clear();
         String string;
+
         try {
             string = Operations.readWords();
         } catch (IOException e) {
@@ -99,6 +104,7 @@ public class Operations {
         new Thread(() -> {
             int curTime = Main.getTime();
             int i = 0;
+
             while (Main.getTime() > 0) {
                 synchronized (monitor) {
                     while (Main.isPaused())
@@ -113,11 +119,13 @@ public class Operations {
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
+
                 Main.setTime(Main.getTime() - 1);
                 int finalI = i;
+
                 Platform.runLater(() -> {
                     Main.getTimeL().setText(Integer.toString(Main.getTime()));
-                    Main.getSeries().getData().add(new XYChart.Data<>(finalI, (Operations.getRecords().size()) / (((double) Main.getGenTime() - (double) Main.getTime()) / 60)));
+                    Main.getSeries().getData().add(new XYChart.Data<>(finalI, (records.size()) / (((double) Main.getGenTime() - (double) Main.getTime()) / 60)));
                 });
                 i++;
             }
@@ -128,6 +136,7 @@ public class Operations {
             Main.setTime(curTime);
             Operations.calcResult();
             Operations.createFile();
+
             Platform.runLater(() -> {
                 try {
                     Operations.fillTextFlow();
@@ -136,10 +145,11 @@ public class Operations {
                 }
                 Main.getChoiceTime().setDisable(false);
                 Main.getChoiceLanguage().setDisable(false);
-                Main.getChart().setVisible(true);
-                Main.getRoot().setVisible(false);
+                Main.getChartPane().setVisible(true);
+                Main.getTextPane().setVisible(false);
             });
-            Operations.getRecords().clear();
+
+            records.clear();
         }).start();
     }
 
@@ -163,38 +173,36 @@ public class Operations {
                 text.setFill(Color.rgb(209, 208, 197));
             }
         });
+
         Main.setCurrent(0);
         Main.setTime(Main.getGenTime());
-        Operations.getRecords().clear();
+        records.clear();
     }
 
     public static void calcResult() {
-        int correct = 0, incorrect = 0, extra = 0, missed = 0;
+        Platform.runLater(() -> {
+            int correct = 0, incorrect = 0, extra = 0, missed = 0;
+            for (int i = 0; i < Main.getMainText().getChildren().size(); i++) {
+                Text text = (Text) Main.getMainText().getChildren().get(i);
+                if (text.getFill().equals(Color.rgb(55, 255, 55)))
+                    correct++;
+                else if (text.getFill().equals(Color.rgb(255, 55, 55)))
+                    incorrect++;
+                else if (text.getFill().equals(Color.rgb(255, 127, 80)))
+                    extra++;
+                else if (text.getFill().equals(Color.rgb(130, 130, 130)))
+                    missed++;
+            }
+            if (correct + incorrect + extra + missed == 0)
+                Main.getAccP().setText("0");
+            else
+                Main.getAccP().setText(Integer.toString(correct * 100 / (correct + incorrect + extra + missed)));
 
-        for (int i = 0; i < Main.getMainText().getChildren().size(); i++) {
-            Text text = (Text) Main.getMainText().getChildren().get(i);
-            if (text.getFill().equals(Color.rgb(55, 255, 55)))
-                correct++;
-            else if (text.getFill().equals(Color.rgb(255, 55, 55)))
-                incorrect++;
-            else if (text.getFill().equals(Color.rgb(255, 127, 80)))
-                extra++;
-            else if (text.getFill().equals(Color.rgb(130, 130, 130)))
-                missed++;
-        }
-
-        try {
-            int finalCorrect = correct, finalIncorrect = incorrect, finalExtra = extra, finalMissed = missed;
-            Platform.runLater(() -> {
-                Main.getAccP().setText(Integer.toString(finalCorrect * 100 / (finalCorrect + finalIncorrect + finalExtra + finalMissed)));
-                Main.getWpmP().setText(Integer.toString((int) ((Operations.getRecords().size() + 1) / ((double) Main.getGenTime() / 60))));
-                Main.getCharactersP().setText(finalCorrect + "/" + finalIncorrect + "/" + finalExtra + "/" + finalMissed);
-                Main.getLanguageP().setText(Main.getLanguage());
-                Main.getTimeP().setText(Integer.toString(Main.getGenTime()));
-            });
-        } catch (ArithmeticException e) {
-            Main.getAccP().setText("0");
-        }
+            Main.getWpmP().setText(Integer.toString((int) (records.size() / ((double) Main.getGenTime() / 60))));
+            Main.getCharactersP().setText(correct + "/" + incorrect + "/" + extra + "/" + missed);
+            Main.getLanguageP().setText(Main.getLanguage());
+            Main.getTimeP().setText(Integer.toString(Main.getGenTime()));
+        });
     }
 
     public static Label labelCreate(String text, int choose) {
@@ -209,5 +217,36 @@ public class Operations {
         }
 
         return label;
+    }
+
+    public static void playWaveAnim(Text text) {
+        TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(0.1), text);
+        translateTransition.setCycleCount(5 * 2);
+        translateTransition.setFromX(0);
+        translateTransition.setToX(2);
+        translateTransition.setAutoReverse(true);
+
+        translateTransition.setOnFinished(event -> text.setTranslateX(0));
+
+        translateTransition.play();
+    }
+
+    public static void playButAnim(Button button) {
+        RotateTransition rotateTransition = new RotateTransition(Duration.millis(200), button);
+        rotateTransition.setToAngle(0);
+
+        button.setOnMouseEntered(event -> {
+            if (rotateTransition.getStatus() == Animation.Status.RUNNING)
+                rotateTransition.stop();
+            rotateTransition.setToAngle(90);
+            rotateTransition.play();
+        });
+
+        button.setOnMouseExited(event -> {
+            if (rotateTransition.getStatus() == Animation.Status.RUNNING)
+                rotateTransition.stop();
+            rotateTransition.setToAngle(0);
+            rotateTransition.play();
+        });
     }
 }
