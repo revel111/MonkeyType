@@ -12,7 +12,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.FileNotFoundException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -30,6 +36,11 @@ public class Operations {
         return records;
     }
 
+    /**
+     * Function for reading all available for test language files.
+     *
+     * @return: String[]
+     */
     public static String[] getLanguages() {
         File folder = new File("dictionary");
         File[] list = folder.listFiles();
@@ -43,6 +54,12 @@ public class Operations {
         return strings;
     }
 
+    /**
+     * Function for reading random words from a chosen language files.
+     * Auxiliary function for fillTextFlow().
+     *
+     * @return: void
+     */
     public static String readWords() throws IOException {
         StringBuilder stringB = new StringBuilder();
         Random random = new Random();
@@ -70,6 +87,12 @@ public class Operations {
         return Objects.requireNonNull(stringB).toString();
     }
 
+    /**
+     * Function for creating file with results of a test.
+     * File can be found in resources/monkeytype/results directory.
+     *
+     * @return: void
+     */
     public static void createFile() {
         String name = "src/main/resources/monkeytype/results/" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH-mm-ss")) + ".txt";
 
@@ -81,6 +104,11 @@ public class Operations {
         }
     }
 
+    /**
+     * Function for filling textFlow with text to type after the end of a test.
+     *
+     * @return: void
+     */
     public static void fillTextFlow() throws FileNotFoundException {
         Main.getMainText().getChildren().clear();
         String string;
@@ -100,6 +128,11 @@ public class Operations {
         }
     }
 
+    /**
+     * Function creates thread responsible for timer for main game process.
+     *
+     * @return: void
+     */
     public static synchronized void timer() {
         new Thread(() -> {
             int curTime = Main.getTime();
@@ -163,12 +196,22 @@ public class Operations {
         }).start();
     }
 
+    /**
+     * Monitor used for pausing test if ctrl+shift+p combination was pressed by user.
+     *
+     * @return: void
+     */
     public static void pause() {
         synchronized (monitor) {
             Main.setPaused(true);
         }
     }
 
+    /**
+     * Monitor used for resuming test if it was paused by user by pressing ctrl+shift+p combination.
+     *
+     * @return: void
+     */
     public static void resume() {
         synchronized (monitor) {
             Main.setPaused(false);
@@ -176,6 +219,11 @@ public class Operations {
         }
     }
 
+    /**
+     * Function used for restarting test if user pressed tab+enter combination.
+     *
+     * @return: void
+     */
     public static void restart() {
         Platform.runLater(() -> {
             for (int i = 0; i < Main.getMainText().getChildren().size(); i++) {
@@ -190,6 +238,11 @@ public class Operations {
         Main.setTime(Main.getGenTime());
     }
 
+    /**
+     * Function for calculating a result of a test.
+     *
+     * @return: void
+     */
     public static void calcResult() {
         Platform.runLater(() -> {
             int correct = 0, incorrect = 0, extra = 0, missed = 0;
@@ -216,6 +269,12 @@ public class Operations {
         });
     }
 
+    /**
+     * Auxiliary function used for simplification of Label creation (code cleaning).
+     *
+     * @param: String text, int choose
+     * @return: Label
+     */
     public static Label labelCreate(String text, int choose) {
         Label label = new Label(text);
 
@@ -230,6 +289,12 @@ public class Operations {
         return label;
     }
 
+    /**
+     * Function is used for creating animation when letter was typed.
+     *
+     * @param: Text text
+     * @return: void
+     */
     public static void playWaveAnim(Text text) {
         TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(0.1), text);
         translateTransition.setCycleCount(5 * 2);
@@ -242,6 +307,12 @@ public class Operations {
         translateTransition.play();
     }
 
+    /**
+     * Function is used for refresh button if user points on this button or vice versa.
+     *
+     * @param: Button button
+     * @return: void
+     */
     public static void playButAnim(Button button) {
         RotateTransition rotateTransition = new RotateTransition(Duration.millis(200), button);
         rotateTransition.setToAngle(0);

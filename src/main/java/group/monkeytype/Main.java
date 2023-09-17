@@ -27,6 +27,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Objects;
 
+
+// Maybe I could split this program onto more files and classes but I decided to have only two since there is not so many lines
 public class Main extends Application {
     private static String language = null;
     private static int time = 0;
@@ -138,6 +140,9 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) throws FileNotFoundException {
+        /**
+         * Lines used for main thread (timer() function) stopping and exit from program.
+         */
         stage.setOnCloseRequest(e -> {
             Platform.exit();
             System.exit(0);
@@ -249,7 +254,9 @@ public class Main extends Application {
         stage.getIcons().add(new Image(new FileInputStream("src/main/resources/monkeytype/images/icon.png")));
 
 
-
+        /**
+         * Event handler which handles test typing and logic when test is not started, for example.
+         */
         scene.setOnKeyPressed(event -> {
             KeyCodeCombination ctrlShiftP = new KeyCodeCombination(KeyCode.P, KeyCombination.CONTROL_DOWN, KeyCombination.SHIFT_DOWN);
             if (language == null || time == -1) {
